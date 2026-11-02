@@ -1,0 +1,8 @@
+# 生成的、含真实值的配置，永远不要进仓库
+clash.yaml
+clash/*.generated.yaml
+*.local.yaml
+
+# 本地测试产物
+/tmp/
+*.log

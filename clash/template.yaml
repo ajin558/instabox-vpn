@@ -1,0 +1,68 @@
+# Clash Verge / Mihomo 本地配置模板
+# 不要直接用这个文件：先用 generate.py 把占位符换成真实值再导入。
+# 需要 Mihomo 内核，原版 Clash 不支持 VLESS；XHTTP 需要较新的 Mihomo。
+
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+ipv6: false
+
+# 客户端 DNS：用 DoH 解析，避免本地 DNS 对 instabox.tech 解析异常
+# 注意：不要加 fallback，否则可能触发 GeoIP 下载
+dns:
+  enable: true
+  ipv6: false
+  default-nameserver:
+    - 223.5.5.5
+    - 8.8.8.8
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://dns.google/dns-query
+
+proxies:
+  - name: instabox-muse-xhttp
+    type: vless
+    server: __XHTTP_HOST__
+    port: 443
+    uuid: __UUID__
+    udp: true
+    tls: true
+    servername: __XHTTP_HOST__
+    client-fingerprint: chrome
+    alpn:
+      - h2
+      - http/1.1
+    network: xhttp
+    xhttp-opts:
+      path: /xhttp
+      host: __XHTTP_HOST__
+      mode: packet-up
+    skip-cert-verify: false
+
+  - name: instabox-muse-ws
+    type: vless
+    server: __WS_HOST__
+    port: 443
+    uuid: __UUID__
+    udp: true
+    tls: true
+    servername: __WS_HOST__
+    client-fingerprint: chrome
+    network: ws
+    ws-opts:
+      path: /ws
+      headers:
+        Host: __WS_HOST__
+    skip-cert-verify: false
+
+proxy-groups:
+  - name: PROXY
+    type: select
+    proxies:
+      - instabox-muse-xhttp
+      - instabox-muse-ws
+      - DIRECT
+
+rules:
+  - MATCH,PROXY
