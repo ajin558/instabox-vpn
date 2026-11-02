@@ -127,6 +127,12 @@ bash server/test.sh <xhttp-host> <ws-host> <uuid>
 0.15–0.29 秒）是回环延迟，**不代表用户本地的延迟**。
 用户本地的延迟和可用性，还要用户在自己电脑上实测。
 
+用户本地实测已补上（2026-11-02，Windows + Clash Verge）：
+把 Mihomo 内核从 v1.19.3 升到 v1.19.33 后，配置一行没改，
+XHTTP 测 `https://www.google.com/generate_204` 为 259 ms，
+WS 为 207 ms，两路都通。这才是最终验收，
+机器本机实测通过不等于用户本地能用。
+
 ### 5. 生成 Clash 配置
 
 ```bash
@@ -145,7 +151,15 @@ mihomo -t -f clash.yaml
 
 然后在 Clash Verge 里导入为**本地配置**，注意：
 
-- 必须用 Mihomo 内核，原版 Clash 不支持 VLESS；XHTTP 需要较新的 Mihomo。
+- 必须用 Mihomo 内核，原版 Clash 不支持 VLESS。
+  **XHTTP 需要 Mihomo v1.19.22 及以上**（XHTTP 传输支持自 v1.19.22
+  加入），本项目在用户本地实测通过的版本是 **v1.19.33**
+  （Windows amd64-v1）。低于 v1.19.22 的旧核心会出现
+  “WS 能用、XHTTP 不能用”的典型表现，配置本身没错，不要因此改服务端。
+- 本仓库**不打包、不分发 Mihomo 二进制**，内核由用户在
+  Clash Verge 里自行更新：先备份旧核心，换上官方发布页下载的新核心，
+  重启 Clash Verge 后再测。更新前先核对官方发布页的校验信息，
+  核对不上就不要用。
 - PROXY 组里先选 `instabox-muse-xhttp`，不行再切 `instabox-muse-ws`。
 - 开启系统代理，再测延迟。
 - 配置里的 DNS 用了阿里 + Google 的 DoH，帮助解析 instabox.tech，
@@ -157,7 +171,9 @@ mihomo -t -f clash.yaml
 
 1. **服务端日志里完全没有用户那次请求的记录**：请求根本没到 Xray，
    先查客户端到网关这一段：浏览器能不能打开公开地址、
-   Clash 选没选对代理组、系统代理开了没有、内核版本够不够新。
+   Clash 选没选对代理组、系统代理开了没有、内核版本够不够新
+   （XHTTP 要求 Mihomo ≥ v1.19.22，实测通过 v1.19.33；
+   旧核心 v1.19.3 的实测表现就是 WS 通、XHTTP 不通）。
 2. **两个传输都延迟“-”**：先确认网关地址在用户本地能不能解析、
    能不能 TLS 连通；再看 Clash 日志的报错行。
 3. **暂停后第一次连超时**：正常，闲置暂停后唤醒最多等 45 秒，
