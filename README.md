@@ -77,7 +77,7 @@ bash server/setup.sh
 
 它会做这些事，全部幂等，可重复跑：
 
-- 下载最新 Xray（linux/amd64）到 `/data/xray/`
+- 下载脚本里钉住版本的 Xray（linux/amd64，当前 v26.10.31）到 `/data/xray/`，下载后先验官方 sha256 再安装；已装同版本则跳过，升级 = 改脚本顶部的版本号 + sha256 后重跑
 - 如果 `/data/xray/uuid.txt` 不存在，就生成一个新 UUID 存进去；
   已存在就复用，**不要每次重跑都换 UUID，否则客户端配置就失效了**
 - 写 `/data/xray/config.json`：10000 走 XHTTP，10001 走 WS，日志级别 error
@@ -95,7 +95,7 @@ ss -ltn | grep -E '10000|10001'
 
 ### 3. 发布端口
 
-通过 InstaBox API 发布两个端口（需要 Idempotency-Key，见 `AGENT.md`）：
+通过 InstaBox API 发布两个端口（建议带 Idempotency-Key，见 `AGENT.md`）：
 
 - `POST /v1/machines/{id}/ports`，`{"port": 10000, "name": "xray"}`
 - `POST /v1/machines/{id}/ports`，`{"port": 10001, "name": "xray-ws"}`

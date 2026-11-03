@@ -62,9 +62,10 @@ bash server/setup.sh
 用 API 发布，不要只在机器里监听就宣称完成：
 
 - `POST /v1/machines/{id}/ports`，body `{"port": 10000, "name": "xray"}`，
-  必须带一个唯一的 `Idempotency-Key` 请求头。
+  建议带一个唯一的 `Idempotency-Key` 请求头（防重试时重复发布；
+  2026-11-03 实测不带也能发布成功，不是硬性要求）。
 - `POST /v1/machines/{id}/ports`，body `{"port": 10001, "name": "xray-ws"}`，
-  同样带唯一的 `Idempotency-Key`。
+  同样建议带唯一的 `Idempotency-Key`。
 - 用 `GET /v1/machines/{id}/ports` 核对两个 URL 都在，记下两个主机名。
 
 公开端口不是秘密，任何人拿到链接都能访问该端口的服务，
