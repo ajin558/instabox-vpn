@@ -41,7 +41,14 @@ def main() -> int:
 
     out = pathlib.Path(args.out)
     out.write_text(rendered, encoding="utf-8")
+    # 生成文件里是明文 UUID：权限收紧到本人可读，和 uuid.txt 的 600 对齐。
+    # Windows 上 chmod 语义有限，失败也不中断，文件本身已经写好了。
+    try:
+        out.chmod(0o600)
+    except OSError:
+        pass
     print(f"Wrote {out} (xhttp={args.xhttp_host}, ws={args.ws_host})")
+    print("Permissions set to 600 where supported (the file contains the node UUID, keep it private)")
     print("Validate with: mihomo -t -f " + str(out))
     return 0
 

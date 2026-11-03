@@ -8,15 +8,34 @@ XRAY_DIR="/data/xray"
 UUID_FILE="$XRAY_DIR/uuid.txt"
 CONFIG_FILE="$XRAY_DIR/config.json"
 
-mkdir -p "$XRAY_DIR"
+# Xray 版本钉死，不用 latest：重跑结果可复现，升级时改版本号 + 对应 sha256 再重跑。
+# XRAY_SHA256 是官方 release 的 Xray-linux-64.zip.dgst 里的 SHA2-256，
+# 换版本时去 https://github.com/XTLS/Xray-core/releases 对应版本的 .dgst 核对后更新。
+XRAY_VERSION="v26.10.31"
+XRAY_SHA256="e4bd9119f50ae7c41658b1abd0679ae06f98bd864a2907ff33f2f2cf7081b214"
+
+# 有些机器上 /data 根目录归 root、当前用户建不了子目录（本项目实测踩过）：
+# 先按普通权限建，失败就用 sudo 建好并把所有权给当前用户，再继续。
+if ! mkdir -p "$XRAY_DIR" 2>/dev/null; then
+  sudo mkdir -p "$XRAY_DIR"
+  sudo chown "$(id -un):$(id -gn)" "$XRAY_DIR"
+fi
 cd "$XRAY_DIR"
 
-# 1. 安装 Xray（如果已有可执行文件就跳过下载）
-if [ ! -x "$XRAY_DIR/xray" ]; then
-  echo "Downloading Xray..."
-  curl -L -o xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+# 1. 安装 Xray：没装、或已装版本与钉住的版本不一致时，才下载、校验后安装。
+# 升级 = 改上面的 XRAY_VERSION / XRAY_SHA256 后重跑本脚本。
+INSTALLED_VERSION=""
+if [ -x "$XRAY_DIR/xray" ]; then
+  INSTALLED_VERSION="v$("$XRAY_DIR/xray" version | head -1 | awk '{print $2}')"
+fi
+if [ "$INSTALLED_VERSION" != "$XRAY_VERSION" ]; then
+  echo "Downloading Xray $XRAY_VERSION (installed: ${INSTALLED_VERSION:-none})..."
+  curl -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/$XRAY_VERSION/Xray-linux-64.zip"
+  echo "$XRAY_SHA256  xray.zip" | sha256sum -c -
   unzip -o -q xray.zip
   chmod +x xray
+else
+  echo "Xray $XRAY_VERSION already installed, skipping download"
 fi
 "$XRAY_DIR/xray" version | head -1
 

@@ -43,7 +43,11 @@ run_client() {
   ("$XRAY_BIN" -c "$cfg" > "$WORKDIR/$label.log" 2>&1 & echo $! > "$WORKDIR/$label.pid")
   sleep 2
   for url in https://www.google.com/generate_204 https://www.youtube.com/generate_204 https://github.com; do
-    code=$(curl -s -o /dev/null -w "%{http_code}" -m 25 --socks5-hostname "127.0.0.1:$port" "$url" || echo 000)
+    # 不要写 || echo 000：curl 失败时 -w 已经输出 000，再追加会拼成 000000，
+    # 状态码判断永远对不上（错 UUID 那项曾因此误报 FAIL）。失败时 -w 的 000 已够用，
+    # 极端情况下输出为空再用 :-000 兜底。
+    code=$(curl -s -o /dev/null -w "%{http_code}" -m 25 --socks5-hostname "127.0.0.1:$port" "$url" || true)
+    code=${code:-000}
     expected=200
     if [[ "$url" == *generate_204 ]]; then expected=204; fi
     check "$label $url" "$code" "$expected"
@@ -97,7 +101,8 @@ run_client "$WORKDIR/ws.json" 10809 "ws"
 sed "s/$UUID/00000000-0000-0000-0000-000000000000/" "$WORKDIR/xhttp.json" > "$WORKDIR/wrong.json"
 ("$XRAY_BIN" -c "$WORKDIR/wrong.json" > "$WORKDIR/wrong.log" 2>&1 & echo $! > "$WORKDIR/wrong.pid")
 sleep 2
-code=$(curl -s -o /dev/null -w "%{http_code}" -m 20 --socks5-hostname 127.0.0.1:10808 https://www.google.com/generate_204 || echo 000)
+code=$(curl -s -o /dev/null -w "%{http_code}" -m 20 --socks5-hostname 127.0.0.1:10808 https://www.google.com/generate_204 || true)
+code=${code:-000}
 kill "$(cat "$WORKDIR/wrong.pid")" 2>/dev/null || true
 if [ "$code" = "000" ]; then
   echo "PASS wrong-uuid must fail code=000"
