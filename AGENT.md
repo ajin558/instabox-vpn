@@ -121,9 +121,13 @@ mihomo -t -f clash.yaml
   不要假装仓库里有个可以升级的内核包。
 - 用户本地实测才是最终验收：XHTTP 和 WS 都要在用户电脑上测延迟，
   机器本机实测的回环延迟不算数。
-- PROXY 组先选 xhttp，不行再切 ws；开启系统代理再测延迟。
-- 配置里的 DNS 是阿里 + Google DoH，没有 fallback（fallback 会触发
-  GeoIP 下载，之前实测中在某些环境会失败）。
+- 模式必须是规则（rule），全局模式会绕过分流规则。
+- PROXY 组是 fallback：优先 xhttp，xhttp 彻底失败时自动切 ws，
+  组里不再放 DIRECT；开启系统代理再测延迟。
+- 国内域名/IP 和局域网/私有地址走 DIRECT；首次导入时客户端
+  可能要下载 GEOIP/GEOSITE 数据库，等下载完成再测。
+- 配置里的 DNS 是阿里 + Google DoH，DNS 里没有 fallback；
+  上面说的 fallback 是代理组，不是 DNS。
 - 暂停后第一次连可能要等唤醒，测两次；单次 8 小时到点后是冷却，
   等 5–20 分钟再唤醒。
 - 明确告诉用户：机器本机实测的延迟是回环延迟，不代表用户本地延迟，
