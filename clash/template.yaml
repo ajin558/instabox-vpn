@@ -1,6 +1,11 @@
 # Clash Verge / Mihomo 本地配置模板
 # 不要直接用这个文件：先用 generate.py 把占位符换成真实值再导入。
-# 需要 Mihomo 内核，原版 Clash 不支持 VLESS；XHTTP 需要较新的 Mihomo。
+# 需要 Mihomo 内核，原版 Clash 不支持 VLESS；XHTTP 需要 Mihomo >= v1.19.22，推荐 v1.19.33。
+# 2026-11-04 更新：分流 + fallback
+#   - 国内域名/IP、局域网/私有地址直接走 DIRECT，不再绕海外节点
+#   - PROXY 组改为 fallback：优先 xhttp，xhttp 彻底失败时才自动切 ws，组里不再放 DIRECT
+#   - 模式必须是规则（rule），全局模式会绕过下面这些规则
+#   - 首次导入时 Clash Verge 可能要下载 GEOIP/GEOSITE 数据库，等下载完成再测
 
 mixed-port: 7890
 allow-lan: false
@@ -58,11 +63,19 @@ proxies:
 
 proxy-groups:
   - name: PROXY
-    type: select
+    type: fallback
     proxies:
       - instabox-muse-xhttp
       - instabox-muse-ws
-      - DIRECT
+    url: https://www.gstatic.com/generate_204
+    interval: 300
 
 rules:
+  - GEOSITE,private,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - GEOSITE,cn,DIRECT
+  - GEOIP,CN,DIRECT,no-resolve
   - MATCH,PROXY

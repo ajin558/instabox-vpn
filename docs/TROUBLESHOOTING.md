@@ -79,8 +79,10 @@
 - 机器里是明文端口，不要在机器里再套 TLS，TLS 由网关做。
 - 公开端口 + 正确 UUID 才能用，错 UUID 必须失败；
   如果错 UUID 也能用，说明鉴权出问题了，立即停掉并检查配置。
-- Clash 文件加了 DoH DNS，不要加 fallback，否则可能触发 GeoIP 下载，
-  在某些环境会失败。
+- Clash 文件加了 DoH DNS，DNS 里不要加 fallback，否则可能触发 GeoIP 下载，
+  在某些环境会失败；代理组本身就是 fallback，这和 DNS fallback 是两回事。
+- 如果用户在全局模式下用，上面分流和 fallback 规则都不会生效：
+  先让他改回规则模式，再看连接页是 DIRECT 还是 PROXY。
 
 ## 6. 什么时候该停下来问用户
 

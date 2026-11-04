@@ -160,10 +160,15 @@ mihomo -t -f clash.yaml
   Clash Verge 里自行更新：先备份旧核心，换上官方发布页下载的新核心，
   重启 Clash Verge 后再测。更新前先核对官方发布页的校验信息，
   核对不上就不要用。
-- PROXY 组里先选 `instabox-muse-xhttp`，不行再切 `instabox-muse-ws`。
+- 模式必须是规则（rule），全局模式会绕过分流规则。
+- PROXY 组是 fallback：优先 `instabox-muse-xhttp`，xhttp 彻底失败时
+  自动切 `instabox-muse-ws`，不用手动切，也不用在组里放 DIRECT。
+- 国内域名/IP 和局域网/私有地址走 DIRECT，不再绕海外节点；
+  首次导入时 Clash Verge 可能要下载 GEOIP/GEOSITE 数据库，
+  等下载完成再测延迟。
 - 开启系统代理，再测延迟。
 - 配置里的 DNS 用了阿里 + Google 的 DoH，帮助解析 instabox.tech，
-  没有加 fallback，避免触发 GeoIP 下载。
+  DNS 里没有加 fallback；上面说的 fallback 是代理组，不是 DNS。
 
 ## 排障
 
